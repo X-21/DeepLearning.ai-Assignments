@@ -1,7 +1,7 @@
 from testCases import *
 import numpy as np
 from matplotlib import pyplot as plt
-import sklearn
+# `import sklearn
 from planar_utils import plot_decision_boundary, sigmoid, load_planar_dataset, load_extra_datasets
 
 
@@ -105,7 +105,8 @@ def compute_cost(A2, Y, parameters):
     m = Y.shape[1]  # number of example
 
     # Compute the cross-entropy cost
-    cost = np.sum((1 / m) * (np.dot((-Y), np.log(A2).T) - np.dot((1 - Y), np.log(1 - A2).T)))
+
+    cost = np.sum((1 / m) * ((-1) * Y * np.log(A2) - (1 - Y) * np.log(1 - A2)))
 
     cost = np.squeeze(cost)  # makes sure cost is the dimension we expect.
     # E.g., turns [[17]] into 17
@@ -153,13 +154,115 @@ def backward_propagation(parameters, cache, X, Y):
     return grads
 
 
+def update_parameters(parameters, grads, learning_rate=1.2):
+    """
+    Updates parameters using the gradient descent update rule given above
+
+    Arguments:
+    parameters -- python dictionary containing your parameters
+    grads -- python dictionary containing your gradients
+
+    Returns:
+    parameters -- python dictionary containing your updated parameters
+    """
+    # Retrieve each parameter from the dictionary "parameters"
+    W1 = parameters["W1"]
+    b1 = parameters["b1"]
+    W2 = parameters["W2"]
+    b2 = parameters["b2"]
+
+    # Retrieve each gradient from the dictionary "grads"
+    dW1 = grads["dW1"]
+    db1 = grads["db1"]
+    dW2 = grads["dW2"]
+    db2 = grads["db2"]
+
+    # Update rule for each parameter
+    W1 -= learning_rate * dW1
+    b1 -= learning_rate * db1
+    W2 -= learning_rate * dW2
+    b2 -= learning_rate * db2
+
+    parameters = {"W1": W1,
+                  "b1": b1,
+                  "W2": W2,
+                  "b2": b2}
+
+    return parameters
+
+
+def nn_model(X, Y, n_h, num_iterations=10000, print_cost=False):
+    """
+    Arguments:
+    X -- dataset of shape (2, number of examples)
+    Y -- labels of shape (1, number of examples)
+    n_h -- size of the hidden layer
+    num_iterations -- Number of iterations in gradient descent loop
+    print_cost -- if True, print the cost every 1000 iterations
+
+    Returns:
+    parameters -- parameters learnt by the model. They can then be used to predict.
+    """
+
+    np.random.seed(3)
+    n_x = layer_sizes(X, Y)[0]
+    n_y = layer_sizes(X, Y)[2]
+
+    # Initialize parameters, then retrieve W1, b1, W2, b2. Inputs: "n_x, n_h, n_y". Outputs = "W1, b1, W2, b2, parameters".
+    parameters = initialize_parameters(n_x, n_h, n_y)
+    W1 = parameters["W1"]
+    b1 = parameters["b1"]
+    W2 = parameters["W2"]
+    b2 = parameters["b2"]
+
+    # Loop (gradient descent)
+
+    for i in range(0, num_iterations):
+        # Forward propagation. Inputs: "X, parameters". Outputs: "A2, cache".
+        A2, cache = forward_propagation(X, parameters)
+
+        # Cost function. Inputs: "A2, Y, parameters". Outputs: "cost".
+        cost = compute_cost(A2, Y, parameters)
+
+        # Backpropagation. Inputs: "parameters, cache, X, Y". Outputs: "grads".
+        grads = backward_propagation(parameters, cache, X, Y)
+
+        # Gradient descent parameter update. Inputs: "parameters, grads". Outputs: "parameters".
+        parameters = update_parameters(parameters, grads)
+
+        # Print the cost every 1000 iterations
+        if print_cost and i % 1000 == 0:
+            print("Cost after iteration %i: %f" % (i, cost))
+
+    return parameters
+
+
+def predict(parameters, X):
+    """
+    Using the learned parameters, predicts a class for each example in X
+
+    Arguments:
+    parameters -- python dictionary containing your parameters
+    X -- input data of size (n_x, m)
+
+    Returns
+    predictions -- vector of predictions of our model (red: 0 / blue: 1)
+    """
+
+    # Computes probabilities using forward propagation, and classifies to 0/1 using 0.5 as the threshold.
+    A2, cache = forward_propagation(X, parameters)
+    predictions = np.around(A2)
+
+    return predictions
+
+
 if __name__ == '__main__':
     np.random.seed(1)  # set a seed so that the results are consistent
     X, Y = load_planar_dataset()
 
     plt.figure()
     plt.scatter(X[0, :], X[1, :], c=Y[0, :], s=40, cmap=plt.cm.Spectral)
-    #plt.show()
+    # plt.show()
     plt.close()
 
     # Lets first get a better sense of what our data is like.
@@ -237,5 +340,39 @@ if __name__ == '__main__':
     print("db1 = " + str(grads["db1"]))
     print("dW2 = " + str(grads["dW2"]))
     print("db2 = " + str(grads["db2"]))
+
+    # General gradient descent rule
+    parameters, grads = update_parameters_test_case()
+    parameters = update_parameters(parameters, grads)
+    print("W1 = " + str(parameters["W1"]))
+    print("b1 = " + str(parameters["b1"]))
+    print("W2 = " + str(parameters["W2"]))
+    print("b2 = " + str(parameters["b2"]))
+
+    # Build your neural network model
+    X_assess, Y_assess = nn_model_test_case()
+    parameters = nn_model(X_assess, Y_assess, 4, num_iterations=10000, print_cost=False)
+    print("W1 = " + str(parameters["W1"]))
+    print("b1 = " + str(parameters["b1"]))
+    print("W2 = " + str(parameters["W2"]))
+    print("b2 = " + str(parameters["b2"]))
+
+    # Predictions
+    parameters, X_assess = predict_test_case()
+    predictions = predict(parameters, X_assess)
+    print("predictions mean = " + str(np.mean(predictions)))
+
+    # Build a model with a n_h-dimensional hidden layer
+    parameters = nn_model(X, Y, n_h=4, num_iterations=10000, print_cost=True)
+    # Plot the decision boundary
+    plt.figure()
+    plot_decision_boundary(lambda x: predict(parameters, x.T), X, Y)
+    plt.title("Decision Boundary for hidden layer size " + str(4))
+    plt.show()
+    plt.close()
+    # Print accuracy
+    predictions = predict(parameters, X)
+    print('Accuracy: %d' % float(
+        (np.dot(Y, predictions.T) + np.dot(1 - Y, 1 - predictions.T)) / float(Y.size) * 100) + '%')
 
     a = 1
