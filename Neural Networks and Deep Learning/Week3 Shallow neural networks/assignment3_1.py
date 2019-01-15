@@ -1,7 +1,7 @@
 from testCases import *
 import numpy as np
 from matplotlib import pyplot as plt
-# `import sklearn
+import sklearn
 from planar_utils import plot_decision_boundary, sigmoid, load_planar_dataset, load_extra_datasets
 
 
@@ -262,7 +262,7 @@ if __name__ == '__main__':
 
     plt.figure()
     plt.scatter(X[0, :], X[1, :], c=Y[0, :], s=40, cmap=plt.cm.Spectral)
-    # plt.show()
+    plt.show()
     plt.close()
 
     # Lets first get a better sense of what our data is like.
@@ -276,20 +276,20 @@ if __name__ == '__main__':
     '''
     Simple Logistic Regression
     '''
-    # clf = sklearn.linear_model.LogisticRegressionCV()
-    # clf.fit(X.T, Y.T)
-    # # Plot the decision boundary for logistic regression
-    # plt.figure()
-    # plot_decision_boundary(lambda x: clf.predict(x), X, Y)
-    # plt.title("Logistic Regression")
-    # plt.show()
-    # plt.close()
-    #
-    # # Print accuracy
-    # LR_predictions = clf.predict(X.T)
-    # print('Accuracy of logistic regression: %d ' % float(
-    #     (np.dot(Y, LR_predictions) + np.dot(1 - Y, 1 - LR_predictions)) / float(Y.size) * 100) +
-    #       '% ' + "(percentage of correctly labelled datapoints)")
+    clf = sklearn.linear_model.LogisticRegressionCV()
+    clf.fit(X.T, Y.T)
+    # Plot the decision boundary for logistic regression
+    plt.figure()
+    plot_decision_boundary(lambda x: clf.predict(x), X, Y)
+    plt.title("Logistic Regression")
+    plt.show()
+    plt.close()
+
+    # Print accuracy
+    LR_predictions = clf.predict(X.T)
+    print('Accuracy of logistic regression: %d ' % float(
+        (np.dot(Y, LR_predictions) + np.dot(1 - Y, 1 - LR_predictions)) / float(Y.size) * 100) +
+          '% ' + "(percentage of correctly labelled datapoints)")
 
     '''
     Neural Network model
@@ -375,4 +375,44 @@ if __name__ == '__main__':
     print('Accuracy: %d' % float(
         (np.dot(Y, predictions.T) + np.dot(1 - Y, 1 - predictions.T)) / float(Y.size) * 100) + '%')
 
-    a = 1
+    # Tuning hidden layer size
+    plt.figure(figsize=(16, 32))
+    hidden_layer_sizes = [1, 2, 3, 4, 5, 10, 20]
+    for i, n_h in enumerate(hidden_layer_sizes):
+        plt.subplot(5, 2, i + 1)
+        plt.title('Hidden Layer of size %d' % n_h)
+        parameters = nn_model(X, Y, n_h, num_iterations=5000)
+        plot_decision_boundary(lambda x: predict(parameters, x.T), X, Y)
+        predictions = predict(parameters, X)
+        accuracy = float((np.dot(Y, predictions.T) + np.dot(1 - Y, 1 - predictions.T)) / float(Y.size) * 100)
+        print("Accuracy for {} hidden units: {} %".format(n_h, accuracy))
+    plt.show()
+    plt.close()
+
+    # Performance on other datasets
+    # Datasets
+    noisy_circles, noisy_moons, blobs, gaussian_quantiles, no_structure = load_extra_datasets()
+
+    datasets = {"noisy_circles": noisy_circles,
+                "noisy_moons": noisy_moons,
+                "blobs": blobs,
+                "gaussian_quantiles": gaussian_quantiles}
+
+    dataset = "noisy_moons"
+    X, Y = datasets[dataset]
+    X, Y = X.T, Y.reshape(1, Y.shape[0])
+    # make blobs binary
+    if dataset == "blobs":
+        Y = Y % 2
+    # Visualize the data
+    plt.figure()
+    plt.scatter(X[0, :], X[1, :], c=np.squeeze(Y), s=40, cmap=plt.cm.Spectral)
+    plt.show()
+    plt.close()
+
+    parameters = nn_model(X, Y, n_h=5, num_iterations=10000, print_cost=True)
+    plt.figure()
+    plot_decision_boundary(lambda x: predict(parameters, x.T), X, Y)
+    plt.title("Decision Boundary for hidden layer size " + str(4))
+    plt.show()
+    plt.close()
