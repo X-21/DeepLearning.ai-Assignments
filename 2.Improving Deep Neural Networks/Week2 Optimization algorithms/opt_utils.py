@@ -73,8 +73,8 @@ def initialize_parameters(layer_dims):
         parameters['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1])*  np.sqrt(2 / layer_dims[l-1])
         parameters['b' + str(l)] = np.zeros((layer_dims[l], 1))
         
-        assert parameters['W' + str(l)].shape == layer_dims[l], layer_dims[l-1]
-        assert parameters['W' + str(l)].shape == layer_dims[l], 1
+        assert (parameters['W' + str(l)].shape == layer_dims[l], layer_dims[l-1])
+        assert (parameters['W' + str(l)].shape == layer_dims[l], 1)
         
     return parameters
 
@@ -229,7 +229,7 @@ def plot_decision_boundary(model, X, y):
     plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral)
     plt.ylabel('x2')
     plt.xlabel('x1')
-    plt.scatter(X[0, :], X[1, :], c=y, cmap=plt.cm.Spectral)
+    plt.scatter(X[0, :], X[1, :], c=np.squeeze(y), cmap=plt.cm.Spectral)
     plt.show()
     
 def predict_dec(parameters, X):
@@ -253,7 +253,12 @@ def load_dataset():
     np.random.seed(3)
     train_X, train_Y = sklearn.datasets.make_moons(n_samples=300, noise=.2) #300 #0.2 
     # Visualize the data
-    plt.scatter(train_X[:, 0], train_X[:, 1], c=train_Y, s=40, cmap=plt.cm.Spectral);
+
+    plt.figure()
+    plt.scatter(train_X[:, 0], train_X[:, 1], c=train_Y, s=40, cmap=plt.cm.Spectral)
+    plt.show()
+    plt.close()
+
     train_X = train_X.T
     train_Y = train_Y.reshape((1, train_Y.shape[0]))
     
