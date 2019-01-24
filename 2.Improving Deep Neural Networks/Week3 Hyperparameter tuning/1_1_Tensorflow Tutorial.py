@@ -5,6 +5,8 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from PIL import Image
+from scipy import ndimage, misc
 
 
 def linear_function():
@@ -231,7 +233,7 @@ def forward_propagation(X, parameters):
     b3 = parameters['b3']
 
     # Numpy Equivalents:
-    Z1 = tf.add(tf.matmul( W1,  X),b1)  # Z1 = np.dot(W1, X) + b1
+    Z1 = tf.add(tf.matmul(W1, X), b1)  # Z1 = np.dot(W1, X) + b1
     A1 = tf.nn.relu(Z1)  # A1 = relu(Z1)
     Z2 = tf.add(tf.matmul(W2, A1), b2)  # Z2 = np.dot(W2, a1) + b2
     A2 = tf.nn.relu(Z2)  # A2 = relu(Z2)
@@ -256,9 +258,7 @@ def compute_cost(Z3, Y):
     logits = tf.transpose(Z3)
     labels = tf.transpose(Y)
 
-
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = logits, labels = labels))
-
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
 
     return cost
 
@@ -290,17 +290,16 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate=0.0001,
     costs = []  # To keep track of the cost
 
     # Create Placeholders of shape (n_x, n_y)
-    X, Y = create_placeholders(n_x,n_y)
-
+    X, Y = create_placeholders(n_x, n_y)
 
     # Initialize parameters
     parameters = initialize_parameters()
 
     # Forward propagation: Build the forward propagation in the tensorflow graph
-    Z3 = forward_propagation(X,parameters)
+    Z3 = forward_propagation(X, parameters)
 
     # Cost function: Add cost function to tensorflow graph
-    cost = compute_cost(Z3,Y)
+    cost = compute_cost(Z3, Y)
 
     # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer.
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -329,8 +328,7 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate=0.0001,
                 # IMPORTANT: The line that runs the graph on a minibatch.
                 # Run the session to execute the "optimizer" and the "cost", the feedict should contain a minibatch for (X,Y).
 
-                _, minibatch_cost = sess.run([optimizer,cost],feed_dict={X:minibatch_X,Y:minibatch_Y})
-
+                _, minibatch_cost = sess.run([optimizer, cost], feed_dict={X: minibatch_X, Y: minibatch_Y})
 
                 epoch_cost += minibatch_cost / num_minibatches
 
@@ -363,6 +361,7 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate=0.0001,
         print("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
 
         return parameters
+
 
 if __name__ == '__main__':
     np.random.seed(1)
@@ -464,7 +463,7 @@ if __name__ == '__main__':
         print("W2 = " + str(parameters["W2"]))
         print("b2 = " + str(parameters["b2"]))
 
-    #2-3 Forward propagation in tensorflow
+    # 2-3 Forward propagation in tensorflow
     tf.reset_default_graph()
 
     with tf.Session() as sess:
@@ -473,7 +472,7 @@ if __name__ == '__main__':
         Z3 = forward_propagation(X, parameters)
         print("Z3 = " + str(Z3))
 
-    #2-4 Compute cost
+    # 2-4 Compute cost
     tf.reset_default_graph()
 
     with tf.Session() as sess:
@@ -483,9 +482,23 @@ if __name__ == '__main__':
         cost = compute_cost(Z3, Y)
         print("cost = " + str(cost))
 
-    #2-5Backward propagation & parameter updates
+    # 2-5 Backward propagation & parameter updates
 
-    #2-6 Building the model
-    parameters = model(X_train, Y_train, X_test, Y_test)
+    # 2-6 Building the model
+    parameters = model(X_train, Y_train, X_test, Y_test, num_epochs=100)
 
-    a = 1
+    # 2-7 Test with your own image (optional / ungraded exercise)
+
+    my_image = "thumbs_up.jpg"
+
+    # We preprocess your image to fit your algorithm.
+    fname = "images/" + my_image
+    image = np.array(ndimage.imread(fname, flatten=False))
+    my_image = misc.imresize(image, size=(64, 64)).reshape((1, 64 * 64 * 3)).T
+    my_image_prediction = predict(my_image, parameters)
+
+    plt.figure()
+    plt.imshow(image)
+    plt.show()
+    plt.close()
+    print("Your algorithm predicts: y = " + str(np.squeeze(my_image_prediction)))
