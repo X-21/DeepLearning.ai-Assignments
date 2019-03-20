@@ -134,28 +134,25 @@ def pool_forward(A_prev, hparameters, mode="max"):
     # Initialize output matrix A
     A = np.zeros((m, n_H, n_W, n_C))
 
-    ### START CODE HERE ###
-    for i in range(None):  # loop over the training examples
-        for h in range(None):  # loop on the vertical axis of the output volume
-            for w in range(None):  # loop on the horizontal axis of the output volume
-                for c in range(None):  # loop over the channels of the output volume
+    for i in range(m):  # loop over the training examples
+        for h in range(n_H):  # loop on the vertical axis of the output volume
+            for w in range(n_W):  # loop on the horizontal axis of the output volume
+                for c in range(n_C):  # loop over the channels of the output volume
 
                     # Find the corners of the current "slice" (≈4 lines)
-                    vert_start = None
-                    vert_end = None
-                    horiz_start = None
-                    horiz_end = None
+                    vert_start = h * stride
+                    vert_end = vert_start + f
+                    horiz_start = w * stride
+                    horiz_end = horiz_start + f
 
                     # Use the corners to define the current slice on the ith training example of A_prev, channel c. (≈1 line)
-                    a_prev_slice = None
+                    a_prev_slice = A_prev[i, vert_start:vert_end, horiz_start:horiz_end, c]
 
                     # Compute the pooling operation on the slice. Use an if statment to differentiate the modes. Use np.max/np.mean.
                     if mode == "max":
-                        A[i, h, w, c] = None
+                        A[i, h, w, c] = np.max(a_prev_slice)
                     elif mode == "average":
-                        A[i, h, w, c] = None
-
-    ### END CODE HERE ###
+                        A[i, h, w, c] = np.mean(a_prev_slice)
 
     # Store the input and hparameters in "cache" for pool_backward()
     cache = (A_prev, hparameters)
@@ -164,6 +161,7 @@ def pool_forward(A_prev, hparameters, mode="max"):
     assert (A.shape == (m, n_H, n_W, n_C))
 
     return A, cache
+
 
 if __name__ == '__main__':
     plt.rcParams['figure.figsize'] = (5.0, 4.0)  # set default size of plots
@@ -227,7 +225,5 @@ if __name__ == '__main__':
     A, cache = pool_forward(A_prev, hparameters, mode="average")
     print("mode = average")
     print("A =", A)
-
-
 
     a = 1
