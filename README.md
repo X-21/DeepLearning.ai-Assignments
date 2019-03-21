@@ -7,7 +7,7 @@ These are Exercises for DeepLearning (by Andrew Ng) by python.
 
 
 
-It's for personal use only. If this project have any infringement, you can submit a issue and I will delete this project immediately.
+It's for personal use only. If this project have any infringement, please submit a issue and I will delete this project immediately.
 
 
 
@@ -16,7 +16,7 @@ It's for personal use only. If this project have any infringement, you can submi
 
 
 ## Environment 环境
-Anaconda3-5.3.1
+Anaconda3-5.2.0
 <br>
 
 
