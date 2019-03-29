@@ -271,6 +271,8 @@ if __name__ == '__main__':
 
     # 1.5 Model
     _, _, parameters = model(X_train, Y_train, X_test, Y_test, learning_rate=0.003, num_epochs=100)
+    # Train Accuracy: 0.98888886
+    # Test Accuracy: 0.89166665
     fname = "images/thumbs_up.jpg"
     image = np.array(ndimage.imread(fname, flatten=False))
     my_image = scipy.misc.imresize(image, size=(64, 64))
