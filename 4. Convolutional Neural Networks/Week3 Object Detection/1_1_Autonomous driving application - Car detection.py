@@ -1,7 +1,7 @@
 import argparse
 import os
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import imshow,show
+from matplotlib.pyplot import imshow, show
 import scipy.io
 import scipy.misc
 import numpy as np
@@ -133,7 +133,6 @@ def yolo_eval(yolo_outputs, image_shape=(720., 1280.), max_boxes=10, score_thres
     classes -- tensor of shape (None,), predicted class for each box
     """
 
-
     # Retrieve outputs of the YOLO model (≈1 line)
     box_xy, box_wh, box_confidence, box_class_probs = yolo_outputs[:]
 
@@ -148,8 +147,6 @@ def yolo_eval(yolo_outputs, image_shape=(720., 1280.), max_boxes=10, score_thres
 
     # Use one of the functions you've implemented to perform Non-max suppression with a threshold of iou_threshold (≈1 line)
     scores, boxes, classes = yolo_non_max_suppression(scores, boxes, classes, max_boxes, iou_threshold)
-
-
 
     return scores, boxes, classes
 
@@ -193,6 +190,7 @@ def predict(sess, image_file):
 
     return out_scores, out_boxes, out_classes
 
+
 if __name__ == '__main__':
     # 2.2 - Filtering with a threshold on class scores
     with tf.Session() as test_a:
@@ -213,8 +211,6 @@ if __name__ == '__main__':
     box2 = (1, 2, 3, 4)
     print("iou = " + str(iou(box1, box2)))
 
-
-
     with tf.Session() as test_b:
         scores = tf.random_normal([54, ], mean=1, stddev=4, seed=1)
         boxes = tf.random_normal([54, 4], mean=1, stddev=4, seed=1)
@@ -229,10 +225,10 @@ if __name__ == '__main__':
 
     with tf.Session() as test_b:
         yolo_outputs = (
-                        tf.random_normal([19, 19, 5, 2], mean=1, stddev=4, seed=1),
-                        tf.random_normal([19, 19, 5, 2], mean=1, stddev=4, seed=1),
-                        tf.random_normal([19, 19, 5, 1], mean=1, stddev=4, seed=1),
-                        tf.random_normal([19, 19, 5, 80], mean=1, stddev=4, seed=1))
+            tf.random_normal([19, 19, 5, 2], mean=1, stddev=4, seed=1),
+            tf.random_normal([19, 19, 5, 2], mean=1, stddev=4, seed=1),
+            tf.random_normal([19, 19, 5, 1], mean=1, stddev=4, seed=1),
+            tf.random_normal([19, 19, 5, 80], mean=1, stddev=4, seed=1))
         scores, boxes, classes = yolo_eval(yolo_outputs)
         print("scores[2] = " + str(scores[2].eval()))
         print("boxes[2] = " + str(boxes[2].eval()))
@@ -252,5 +248,3 @@ if __name__ == '__main__':
         scores, boxes, classes = yolo_eval(yolo_outputs, image_shape)
 
         out_scores, out_boxes, out_classes = predict(sess, "test.jpg")
-
-    a = 1
