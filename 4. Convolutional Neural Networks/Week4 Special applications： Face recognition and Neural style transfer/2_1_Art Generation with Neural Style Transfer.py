@@ -73,11 +73,10 @@ def compute_layer_style_cost(a_S, a_G):
     # Computing the loss (≈1 line)
     J_style_layer = tf.reduce_sum(tf.square(tf.subtract(GS, GG))) / (4 * (n_C * n_C) * (n_W * n_H) * (n_W * n_H))
 
-
     return J_style_layer
 
 
-def compute_style_cost(model, STYLE_LAYERS):
+def compute_style_cost(model, STYLE_LAYERS, sess):
     """
     Computes the overall style cost from several chosen layers
 
@@ -93,8 +92,6 @@ def compute_style_cost(model, STYLE_LAYERS):
 
     # initialize the overall style cost
     J_style = 0
-
-    sess = tf.get_default_session()
 
     for layer_name, coeff in STYLE_LAYERS:
         # Select the output tensor of the currently selected layer
@@ -134,6 +131,44 @@ def total_cost(J_content, J_style, alpha=10, beta=40):
     J = alpha * J_content + beta * J_style
 
     return J
+
+
+def model_nn(sess, input_image, num_iterations=200):
+    # Initialize global variables (you need to run the session on the initializer)
+
+    sess.run(tf.global_variables_initializer())
+
+    # Run the noisy input image (initial generated image) through the model. Use assign().
+
+    generated_image = sess.run(model['input'].assign(input_image))
+
+    for i in range(num_iterations):
+
+        # Run the session on the train_step to minimize the total cost
+
+        sess.run(train_step)
+
+        # Compute the generated image by running the session on the current model['input']
+
+        generated_image = sess.run(model['input'])
+
+        # Print every 20 iteration.
+        if i % 20 == 0:
+            Jt, Jc, Js = sess.run([J, J_content, J_style])
+            print("Iteration " + str(i) + " :")
+            print("total cost = " + str(Jt))
+            print("content cost = " + str(Jc))
+            print("style cost = " + str(Js))
+
+            # save current generated image in the "/output" directory
+            save_image("output/" + str(i) + ".png", generated_image)
+
+    # save last generated image
+    save_image('output/generated_image.jpg', generated_image)
+
+    return generated_image
+
+
 if __name__ == '__main__':
     model = load_vgg_model("pretrained-model/imagenet-vgg-verydeep-19.mat")
     print(model)
@@ -200,8 +235,9 @@ if __name__ == '__main__':
     show()
 
     # Assign the content image to be the input of the VGG model.
-    aa=model['input'].assign(content_image)
-    sess.run(aa)
+    model = load_vgg_model("pretrained-model/imagenet-vgg-verydeep-19.mat")
+
+    sess.run(model['input'].assign(content_image))
 
     # Select the output tensor of layer conv4_2
     out = model['conv4_2']
@@ -217,6 +253,18 @@ if __name__ == '__main__':
     # Compute the content cost
     J_content = compute_content_cost(a_C, a_G)
 
+    # Assign the input of the model to be the "style" image
+    sess.run(model['input'].assign(style_image))
 
+    # Compute the style cost
+    J_style = compute_style_cost(model, STYLE_LAYERS, sess)
 
-    a = 1
+    J = total_cost(J_content, J_style, alpha=10, beta=40)
+
+    # define optimizer (1 line)
+    optimizer = tf.train.AdamOptimizer(2.0)
+
+    # define train_step (1 line)
+    train_step = optimizer.minimize(J)
+
+    model_nn(sess, generated_image)
