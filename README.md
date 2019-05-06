@@ -17,7 +17,7 @@ It's for personal use only. If this project have any infringement, please tell m
 
 ## Environment 环境
 Python ---------- 3.6.8  
-TensorFlow ------ 1.13.1  
+TensorFlow ----- 1.13.1  
 Keras ------------ 2.2.4
 
 ## notes 备注 
