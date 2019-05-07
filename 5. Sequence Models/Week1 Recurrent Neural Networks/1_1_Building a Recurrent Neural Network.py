@@ -282,8 +282,6 @@ def rnn_backward(da, caches):
                         dba -- Gradient w.r.t the bias, of shape (n_a, 1)
     """
 
-
-
     # Retrieve values from the first cache (t=1) of caches (≈2 lines)
     (caches, x) = caches
     (a1, a0, x1, parameters) = caches[0]
@@ -303,7 +301,7 @@ def rnn_backward(da, caches):
     # Loop through all the time steps
     for t in reversed(range(T_x)):
         # Compute gradients at time step t. Choose wisely the "da_next" and the "cache" to use in the backward propagation step. (≈1 line)
-        gradients = rnn_cell_backward(da[:,:,t]+da_prevt,caches[t])#每个时间步之后更新梯度,da_prevt是上一个神经元的反向传播，da是自己的y的误差
+        gradients = rnn_cell_backward(da[:, :, t] + da_prevt, caches[t])  # 每个时间步之后更新梯度,da_prevt是上一个神经元的反向传播，da是自己的y的误差
         # Retrieve derivatives from gradients (≈ 1 line)
         dxt, da_prevt, dWaxt, dWaat, dbat = gradients["dxt"], gradients["da_prev"], gradients["dWax"], gradients[
             "dWaa"], gradients["dba"]
@@ -315,7 +313,6 @@ def rnn_backward(da, caches):
 
     # Set da0 to the gradient of a which has been backpropagated through all time-steps (≈1 line)
     da0 = da_prevt
-
 
     # Store the gradients in a python dictionary
     gradients = {"dx": dx, "da0": da0, "dWax": dWax, "dWaa": dWaa, "dba": dba}
@@ -350,39 +347,41 @@ def lstm_cell_backward(da_next, dc_next, cache):
     # Retrieve information from "cache"
     (a_next, c_next, a_prev, c_prev, ft, it, cct, ot, xt, parameters) = cache
 
-
     # Retrieve dimensions from xt's and a_next's shape (≈2 lines)
     n_x, m = xt.shape
     n_a, m = a_next.shape
 
     # Compute gates related derivatives, you can find their values can be found by looking carefully at equations (7) to (10) (≈4 lines)
     dot = da_next * np.tanh(c_next) * ot * (1 - ot)
-    dcct = (dc_next * it + ot * (1 - np.square(np.tanh(c_next))) * it * da_next) * (1 - np.square(cct))
-    dit = None
-    dft = None
-
+    dct = dc_next + da_next * ot * (1 - np.tanh(c_next) ** 2)
+    dcct = dct * it * (1 - cct ** 2)
+    dit = dct * cct * it * (1 - it)
+    dft = dct * c_prev * ft * (1 - ft)
 
     # Compute parameters related derivatives. Use equations (11)-(14) (≈8 lines)
-    dWf = None
-    dWi = None
-    dWc = None
-    dWo = None
-    dbf = None
-    dbi = None
-    dbc = None
-    dbo = None
+    con = np.vstack((a_prev, xt))
+    dWf = np.dot(dft, con.T)
+    dWi = np.dot(dit, con.T)
+    dWc = np.dot(dcct, con.T)
+    dWo = np.dot(dot, con.T)
+    dbf = np.sum(dft, axis=1, keepdims=True)
+    dbi = np.sum(dit, axis=1, keepdims=True)
+    dbc = np.sum(dcct, axis=1, keepdims=True)
+    dbo = np.sum(dot, axis=1, keepdims=True)
 
     # Compute derivatives w.r.t previous hidden state, previous memory state and input. Use equations (15)-(17). (≈3 lines)
-    da_prev = None
-    dc_prev = None
-    dxt = None
-
+    da_prev = np.dot(parameters['Wf'][:, :n_a].T, dft) + np.dot(parameters['Wi'][:, :n_a].T, dit) + np.dot(
+        parameters['Wc'][:, :n_a].T, dcct) + np.dot(parameters['Wo'][:, :n_a].T, dot)
+    dc_prev = dc_next * ft + ot * (1 - np.square(np.tanh(c_next))) * ft * da_next
+    dxt = np.dot(parameters['Wf'][:, n_a:].T, dft) + np.dot(parameters['Wi'][:, n_a:].T, dit) + np.dot(
+        parameters['Wc'][:, n_a:].T, dcct) + np.dot(parameters['Wo'][:, n_a:].T, dot)
 
     # Save gradients in dictionary
     gradients = {"dxt": dxt, "da_prev": da_prev, "dc_prev": dc_prev, "dWf": dWf, "dbf": dbf, "dWi": dWi, "dbi": dbi,
                  "dWc": dWc, "dbc": dbc, "dWo": dWo, "dbo": dbo}
 
     return gradients
+
 
 if __name__ == '__main__':
     np.random.seed(1)
@@ -526,7 +525,6 @@ if __name__ == '__main__':
     print("gradients[\"dba\"][4] =", gradients["dba"][4])
     print("gradients[\"dba\"].shape =", gradients["dba"].shape)
 
-
     '''
     LSTM BP
     '''
@@ -574,6 +572,5 @@ if __name__ == '__main__':
     print("gradients[\"dbc\"].shape =", gradients["dbc"].shape)
     print("gradients[\"dbo\"][4] =", gradients["dbo"][4])
     print("gradients[\"dbo\"].shape =", gradients["dbo"].shape)
-
 
     a = 1
