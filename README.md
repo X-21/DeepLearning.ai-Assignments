@@ -25,6 +25,9 @@ Keras ------------ 2.2.4
 
 2.第五课第一周的练习中，1_1的LSTM的BP公式和参考不一样。
 
+3.第五课第二周中的data文件夹、第三周中的XY_dev、XY_train文件夹体积过大，所以放到网盘里。p(remove)an.bai(remove)du.c(remove)om/s/11N1FhI-b0wqLw9iHBl2ddw   提取：6otq 。下载后压缩包的解压密码为DL。
+
+
 ## references 参考
 1. @fengdu78 的 [deeplearning_ai_books](https://github.com/fengdu78/deeplearning_ai_books)
 <br>
